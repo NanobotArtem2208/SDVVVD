@@ -1,62 +1,69 @@
-let canvas = document.getElementsByClassName('rain')[0];
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Импортируем необходимые модули из библиотеки Three.js
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-let c = canvas.getContext('2d');
+// Создаем сцену, камеру и рендерер
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-function randomNum(max, min) {
-	return Math.floor(Math.random() * max) + min;
-}
+// Загружаем модель осеннего листа
+const loader = new GLTFLoader();
 
-function RainDrops(x, y, endy, velocity, opacity) {
+loader.load('/model/scene.gltf', function(gltf) {
+  // Настроим осенний лист
+  const leaf = gltf.scene;
+  scene.add(leaf);
 
-	this.x = x;
-	this.y = y;
-	this.endy = endy;
-	this.velocity = velocity;
-	this.opacity = opacity;
+  // Создаем массив для хранения экземпляров осенних листьев
+  const leafInstances = [];
 
-	this.draw = function() {
-		c.beginPath();
-		c.moveTo(this.x, this.y);
-		c.lineTo(this.x, this.y - this.endy);
-		c.lineWidth = 1;
-		c.strokeStyle= "rgba(255, 255, 255, " + this.opacity + ")";
-		c.stroke();
-	}
+  // Создаем 100 экземпляров осенних листьев
+  for (let i = 0; i < 10; i++) {
+    // Клонируем модель осеннего листа
+    const leafInstance = leaf.clone();
 
-	this.update = function() {
-		let rainEnd = window.innerHeight + 100;
-		if (this.y >= rainEnd) {
-			this.y = this.endy - 100;
-		} else {
-			this.y = this.y + this.velocity;
-		}
-		this.draw();
-	}
+    // Случайно позиционируем каждый лист
+    leafInstance.position.x = Math.random() * 10 - 5;
+    leafInstance.position.y = Math.random() * 10 - 5;
+    leafInstance.position.z = Math.random() * 10 - 5;
 
-}
+    // Случайно задаем вращение каждому листу
+    leafInstance.rotation.x = Math.random() * 2 * Math.PI;
+    leafInstance.rotation.y = Math.random() * 2 * Math.PI;
+    leafInstance.rotation.z = Math.random() * 2 * Math.PI;
 
-let rainArray = [];
+    // Добавляем лист в сцену
+    scene.add(leafInstance);
 
-for (let i = 0; i < 140; i++) {
-	let rainXLocation = Math.floor(Math.random() * window.innerWidth) + 1;
-	let rainYLocation = Math.random() * -500;
-	let randomRainHeight = randomNum(10, 2);
-	let randomSpeed = randomNum(20, .2);
-	let randomOpacity = Math.random() * .55;
-	rainArray.push(new RainDrops(rainXLocation, rainYLocation, randomRainHeight, randomSpeed, randomOpacity));
-}
+    // Добавляем лист в массив
+    leafInstances.push(leafInstance);
+  }
 
-function animateRain() {
+  // Определяем функцию анимации
+  function animate() {
+    requestAnimationFrame(animate);
 
-	requestAnimationFrame(animateRain);
-	c.clearRect(0,0, window.innerWidth, window.innerHeight);
+    // Вращаем каждый экземпляр осеннего листа
+    leafInstances.forEach(leafInstance => {
+      leafInstance.rotation.x += 0.01;
+      leafInstance.rotation.y += 0.01;
+      leafInstance.rotation.z += 0.01;
+    });
 
-	for (let i = 0; i < rainArray.length; i++) {
-		rainArray[i].update();
-	}
+    // Рендерим сцену
+    renderer.render(scene, camera);
+  }
 
-}
+  // Вызываем функцию анимации
+  animate();
+});
 
-animateRain();
+// Обновляем размеры сцены при изменении размера окна
+window.addEventListener('resize', function() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});

@@ -36,7 +36,7 @@ import * as THREE from 'three';
         
             // Model
             {
-                for (let i = 0; i < 50; i++) {
+                for (let i = 0; i < 200; i++) {
                     const loader = new GLTFLoader();
                     loader.load('./model/scene.gltf', gltfResult => {
                         const model = gltfResult.scene;
